@@ -10,14 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check and rank members
+      - name: Rank new members
         env:
           ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
         run: |
           python3 - <<'PY'
           import os
           import requests
-          import time
 
           GROUP_ID = "209897065"
           FAN_ROLE = "groups/209897065/roles/808334056"
