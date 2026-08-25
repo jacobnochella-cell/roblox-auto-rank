@@ -1,0 +1,73 @@
+name: Roblox Auto Rank
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  rank-members:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check and rank members
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import requests
+          import time
+
+          GROUP_ID = "209897065"
+          FAN_ROLE = "groups/209897065/roles/808334056"
+          API_KEY = os.environ["ROBLOX_API_KEY"]
+
+          headers = {
+              "x-api-key": API_KEY,
+              "Content-Type": "application/json"
+          }
+
+          url = f"https://apis.roblox.com/cloud/v2/groups/{GROUP_ID}/memberships"
+          params = {"maxPageSize": 100}
+
+          while True:
+              response = requests.get(url, headers=headers, params=params)
+              response.raise_for_status()
+              data = response.json()
+
+              for member in data.get("memberships", []):
+                  membership_name = member.get("name", "")
+                  membership_id = membership_name.split("/")[-1]
+
+                  roles = member.get("roles", [])
+
+                  if FAN_ROLE not in roles:
+                      assign_url = (
+                          f"https://apis.roblox.com/cloud/v2/groups/"
+                          f"{GROUP_ID}/memberships/{membership_id}:assignRole"
+                      )
+
+                      assign = requests.post(
+                          assign_url,
+                          headers=headers,
+                          json={"role": FAN_ROLE}
+                      )
+
+                      if assign.ok:
+                          print(f"Assigned Fan to {membership_id}")
+                      else:
+                          print(
+                              f"Could not assign {membership_id}: "
+                              f"{assign.status_code} {assign.text}"
+                          )
+
+              token = data.get("nextPageToken")
+
+              if not token:
+                  break
+
+              params["pageToken"] = token
+
+          print("Finished checking members.")
+          PY
