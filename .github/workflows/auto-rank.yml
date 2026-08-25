@@ -1,9 +1,9 @@
 name: Roblox Auto Rank
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"
-  workflow_dispatch:
 
 jobs:
   rank-members:
